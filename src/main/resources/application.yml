@@ -1,0 +1,17 @@
+server:
+  port: 9000
+
+aliyun:
+  vod:
+    # 阿里云 AccessKeyId
+    ak:
+    # 阿里云 AccessKeySecret
+    sk:
+    # 地域标识（Region ID）
+    # 当前支持的地域：
+    #   - 上海：cn-shanghai
+    #   - 北京：cn-beijing
+    #   - 深圳：cn-shenzhen
+    #   - 新加坡：ap-southeast-1
+    # 后续考虑支持：美西（us-west-1）
+    region: cn-shanghai
