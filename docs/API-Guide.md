@@ -48,6 +48,9 @@
 
 ## 播单管理
 
+> **说明**：播单管理能力与结构详细说明请参考文档：[播单管理](./Playlist-Management.md)
+> **说明**：本文档仅介绍 VodAppServer 扩展的播单管理接口，详细接口说明请参考 VOD OpenAPI 文档。
+
 ### 3.1 创建播单
 
 创建一个新的播单。
@@ -467,6 +470,7 @@ curl -X GET http://localhost:9000/appServer/health
 ## 下一步
 
 - 📖 查看 [Quick-Start.md](./Quick-Start.md) 了解基本使用
+- 📺 了解 [Playlist-Management.md](./Playlist-Management.md) 播单结构与管理
 - 🚀 探索 [Advanced-Features.md](./Advanced-Features.md) 实现复杂业务
 - 📤 了解 [Upload-and-MPS.md](./Upload-and-MPS.md) 的上传与媒体处理能力
 - 💡 参考 [Integration-Guide.md](./Integration-Guide.md) 集成到生产环境

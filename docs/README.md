@@ -15,6 +15,7 @@
 
 | 文档名称 | 文档链接 | 详细描述 | 用途说明 |
 |---------|---------|---------|---------|
+| 播单管理 | [Playlist-Management.md](./Playlist-Management.md) | 详细介绍播单（Playlist）的概念、从单一媒资到媒资列表的演进，以及基于动态实体的技术实现 | 帮助开发者理解播单的核心概念、技术原理和使用场景 |
 | API 指引 | [API-Guide.md](./API-Guide.md) | 提供 VodAppServer 当前可用 API 接口的详细说明，包括播单管理和媒体处理等接口 | 帮助开发者了解接口使用、参数说明和响应格式 |
 | 上传与媒体处理 | [Upload-and-MPS.md](./Upload-and-MPS.md) | 介绍 VOD 上传 SDK、转码（MPS）等相关能力和典型用法 | 帮助开发者完成媒资上传、转码等媒体处理流程 |
 
@@ -27,12 +28,18 @@
 
 ## **推荐阅读顺序**
 
+### **新手入门路径**
+
 1. [集成指引](./Integration-Guide.md) - 环境准备与项目集成
 2. [快速开始](./Quick-Start.md) - 快速上手和基础操作
-3. [API 指引](./API-Guide.md) - 接口规范和使用说明
-4. [上传与媒体处理](./Upload-and-MPS.md) - 介绍上传和媒体处理功能
-5. [高级功能](./Advanced-Features.md) - 深度定制和性能优化
-6. [播放鉴权方案](./vidauth-design.md) - 了解 VidAuth 新旧方案对比与本地签名优势
+3. [播单管理](./Playlist-Management.md) - 理解播单核心概念和技术实现
+4. [API 指引](./API-Guide.md) - 接口规范和使用说明
+5. [上传与媒体处理](./Upload-and-MPS.md) - 介绍上传和媒体处理功能
+
+### **进阶学习路径**
+
+6. [高级功能](./Advanced-Features.md) - 深度定制和性能优化
+7. [播放鉴权方案](./vidauth-design.md) - 了解 VidAuth 新旧方案对比与本地签名优势
 
 ---
 
