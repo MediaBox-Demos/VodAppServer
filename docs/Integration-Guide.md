@@ -40,6 +40,7 @@
 
 在您的项目 `pom.xml` 中添加以下依赖：
 ⚠️ **重要提醒**：<!-- 阿里云 VOD SDK -->依赖项需要提升到2.16.39及以上
+<!-- 使用fc部署是需要添加依赖项并注释调本地jar包引用 -->
 
 ```xml
 <dependencies>
@@ -56,7 +57,17 @@
         <version>4.6.3</version>
     </dependency>
 
-    <!-- 阿里云 VOD SDK -->
+    <!-- 阿里云 VOD SDK本地jar包引用 -->
+   <dependency>
+      <groupId>com.aliyun-inner</groupId>
+      <artifactId>aliyun-java-sdk-vod</artifactId>
+      <scope>system</scope>
+      <version>2.16.34</version>
+      <systemPath>${project.basedir}/src/main/resources/lib/aliyun-java-sdk-vod-2.16.34.jar</systemPath>
+   </dependency>
+
+   <!-- 阿里云 VOD SDK -->
+   <!-- 使用fc部署是需要添加依赖项并注释调本地jar包引用 -->
     <dependency>
         <groupId>com.aliyun.inner</groupId>
         <artifactId>aliyun-java-sdk-vod</artifactId>
