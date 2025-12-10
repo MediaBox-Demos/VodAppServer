@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -36,6 +38,28 @@ public class PlayListServiceImpl implements PlayListService {
 
     @Autowired
     private VodConfig vodConfig;
+
+    // 缓存播放密钥，减少重复获取
+    private final Map<String, CachedPlayKey> playKeyCache = new ConcurrentHashMap<>();
+
+    // 播放密钥缓存类
+    private static class CachedPlayKey {
+        private final String playKey;
+        private final long expireTime;
+
+        public CachedPlayKey(String playKey, long expireTime) {
+            this.playKey = playKey;
+            this.expireTime = expireTime;
+        }
+
+        public boolean isExpired() {
+            return System.currentTimeMillis() > expireTime;
+        }
+
+        public String getPlayKey() {
+            return playKey;
+        }
+    }
 
     /**
      * 获取播单详情（含视频列表和播放凭证）
@@ -64,39 +88,48 @@ public class PlayListServiceImpl implements PlayListService {
                 return ResponseResult.makeErrRsp("播放列表为空");
             }
         }
-        // 2. 获取播单详细信息
-        GetPlaylistRequest getPlaylistRequest = new GetPlaylistRequest();
-        getPlaylistRequest.setPlaylistId(playListId);
-        GetPlaylistResponse getPlaylistResponse = vodSdkService.getPlaylist(getPlaylistRequest);
+
+        // 确保playListId是final或实际上final的，以便在lambda表达式中使用
+        final String finalPlayListId = playListId;
+
+        // 异步获取播单详细信息和播放密钥
+        CompletableFuture<GetPlaylistResponse> playlistFuture = CompletableFuture.supplyAsync(() -> {
+            GetPlaylistRequest getPlaylistRequest = new GetPlaylistRequest();
+            getPlaylistRequest.setPlaylistId(finalPlayListId);
+            return vodSdkService.getPlaylist(getPlaylistRequest);
+        });
+
+        CompletableFuture<String> playKeyFuture = CompletableFuture.supplyAsync(() -> getPlayKey());
+
+        // 等待异步操作完成
+        GetPlaylistResponse getPlaylistResponse;
+        String playKey;
+        try {
+            getPlaylistResponse = playlistFuture.get();
+            playKey = playKeyFuture.get();
+        } catch (Exception e) {
+            return ResponseResult.makeErrRsp("获取播单信息或播放密钥失败: " + e.getMessage());
+        }
 
         if (getPlaylistResponse == null || getPlaylistResponse.getPlaylistId() == null) {
             return ResponseResult.makeErrRsp("播单不存在");
         }
+
         // 3. 构建播单对象
         PlayList playList = new PlayList(getPlaylistResponse);
 
-        // 4. 处理播单封面图：将imageId转换为实际URL
-        if (playList.getPlaylistCoverUrl() != null) {
-            GetImageInfosResponse getImageInfosResponse = vodSdkService.GetImageInfos(playList.getPlaylistCoverUrl());
-            playList.setPlaylistCoverUrl(getImageInfosResponse != null && getImageInfosResponse.getImageInfo() != null
-                    ? getImageInfosResponse.getImageInfo().get(0).getURL()
-                    : null);
-        }
+        // 4. 异步处理播单封面图：将imageId转换为实际URL
+        CompletableFuture<Void> coverImageFuture = CompletableFuture.runAsync(() -> {
+            if (playList.getPlaylistCoverUrl() != null) {
+                GetImageInfosResponse getImageInfosResponse = vodSdkService.GetImageInfos(playList.getPlaylistCoverUrl());
+                playList.setPlaylistCoverUrl(getImageInfosResponse != null && getImageInfosResponse.getImageInfo() != null
+                        ? getImageInfosResponse.getImageInfo().get(0).getURL()
+                        : null);
+            }
+        });
 
         // 5. 处理视频列表：为每个视频生成播放凭证
         if (getPlaylistResponse.getPlaylistVideos() != null && !getPlaylistResponse.getPlaylistVideos().isEmpty()) {
-            // 5.1 获取播放密钥
-            GetAppPlayKeyResponse getAppPlayKeyResponse;
-            try {
-                getAppPlayKeyResponse = vodSdkService.GetAppPlayKey(JwtConstants.DEFAULT_APP_ID);
-            } catch (Exception e) {
-                return ResponseResult.makeErrRsp("获取播放密钥失败" + e);
-            }
-
-            String playKey = getAppPlayKeyResponse != null && getAppPlayKeyResponse.getAppPlayKey() != null
-                    ? getAppPlayKeyResponse.getAppPlayKey().getPlayKey()
-                    : null;
-
             if (playKey == null || playKey.trim().isEmpty()) {
                 return ResponseResult.makeErrRsp("播放密钥不能为空");
             }
@@ -105,7 +138,8 @@ public class PlayListServiceImpl implements PlayListService {
             final String regionId = vodConfig.getRegion() != null && !vodConfig.getRegion().trim().isEmpty()
                     ? vodConfig.getRegion()
                     : JwtConstants.DEFAULT_REGION_ID;
-            List<PlaylistItemDto> playListVideos = getPlaylistResponse.getPlaylistVideos().stream().map(playlistItemDo -> {
+
+            List<PlaylistItemDto> playListVideos = getPlaylistResponse.getPlaylistVideos().parallelStream().map(playlistItemDo -> {
                 PlaylistItemDto playlistItemDto = new PlaylistItemDto(playlistItemDo);
                 // 生成播放凭证（避免 videoId 为空导致的 NPE）
                 String videoId = playlistItemDto.getVideoId();
@@ -118,6 +152,14 @@ public class PlayListServiceImpl implements PlayListService {
 
             playList.setPlaylistVideos(playListVideos);
         }
+
+        // 等待封面图处理完成
+        try {
+            coverImageFuture.get();
+        } catch (Exception e) {
+            // 忽略封面图处理异常，不影响主流程
+        }
+
         // 6. 设置成功响应
         result.setCode(ResultCode.SUCCESS.code);
         result.setHttpCode("200");
@@ -125,6 +167,32 @@ public class PlayListServiceImpl implements PlayListService {
         result.setMessage("success");
         result.setData(playList);
         return result;
+    }
+
+    /**
+     * 获取播放密钥，带缓存机制
+     * @return playKey
+     */
+    private String getPlayKey() {
+        CachedPlayKey cached = playKeyCache.get(JwtConstants.DEFAULT_APP_ID);
+        if (cached != null && !cached.isExpired()) {
+            return cached.getPlayKey();
+        }
+
+        try {
+            GetAppPlayKeyResponse getAppPlayKeyResponse = vodSdkService.GetAppPlayKey(JwtConstants.DEFAULT_APP_ID);
+            String playKey = getAppPlayKeyResponse != null && getAppPlayKeyResponse.getAppPlayKey() != null
+                    ? getAppPlayKeyResponse.getAppPlayKey().getPlayKey()
+                    : null;
+
+            if (playKey != null) {
+                // 缓存10分钟
+                playKeyCache.put(JwtConstants.DEFAULT_APP_ID, new CachedPlayKey(playKey, System.currentTimeMillis() + 600000));
+            }
+            return playKey;
+        } catch (Exception e) {
+            throw new RuntimeException("获取播放密钥失败", e);
+        }
     }
 
     /**
@@ -156,17 +224,7 @@ public class PlayListServiceImpl implements PlayListService {
         }
 
         // 2. 获取播放密钥（用于生成视频播放凭证）
-        GetAppPlayKeyResponse getAppPlayKeyResponse;
-        try {
-            getAppPlayKeyResponse = vodSdkService.GetAppPlayKey(JwtConstants.DEFAULT_APP_ID);
-        } catch (Exception e) {
-            return ResponseResult.makeErrRsp("获取播放密钥失败" + e);
-        }
-
-        String playKey = getAppPlayKeyResponse != null && getAppPlayKeyResponse.getAppPlayKey() != null
-                ? getAppPlayKeyResponse.getAppPlayKey().getPlayKey()
-                : null;
-
+        String playKey = getPlayKey();
         if (playKey == null || playKey.trim().isEmpty()) {
             return ResponseResult.makeErrRsp("播放密钥不能为空");
         }
@@ -194,40 +252,61 @@ public class PlayListServiceImpl implements PlayListService {
             return playList;
         }).collect(Collectors.toList());
 
-        // 4. 批量处理封面图：将imageId转换为实际URL
-        Set<String> videoIdSet = playLists.stream()
-                .map(PlayList::getPlaylistCoverUrl)
-                .filter(id -> id != null && !id.trim().isEmpty())
-                .collect(Collectors.toSet());
+        // 异步执行封面图和视频信息的获取
+        CompletableFuture<Map<String, GetImageInfosResponse.Image>> mediaMapFuture = CompletableFuture.supplyAsync(() -> {
+            // 4. 批量处理封面图：将imageId转换为实际URL
+            Set<String> videoIdSet = playLists.stream()
+                    .map(PlayList::getPlaylistCoverUrl)
+                    .filter(id -> id != null && !id.trim().isEmpty())
+                    .collect(Collectors.toSet());
 
-        Map<String, GetImageInfosResponse.Image> mediaMap = new HashMap<>();
-        if (!videoIdSet.isEmpty()) {
-            List<String> videoIdList = new ArrayList<>(videoIdSet);
-            String ids = String.join(",", videoIdList.subList(0, videoIdList.size()));
-            // 批量查询图片信息
-            GetImageInfosResponse response = vodSdkService.GetImageInfos(ids);
-            if (response != null && response.getImageInfo() != null) {
-                // 构建 imageId -> Image 映射
-                response.getImageInfo().forEach(image -> {
-                    if (image.getImageId() != null) {
-                        mediaMap.put(image.getImageId(), image);
-                    }
-                });
+            Map<String, GetImageInfosResponse.Image> mediaMap = new HashMap<>();
+            if (!videoIdSet.isEmpty()) {
+                List<String> videoIdList = new ArrayList<>(videoIdSet);
+                String ids = String.join(",", videoIdList);
+                // 批量查询图片信息
+                GetImageInfosResponse response = vodSdkService.GetImageInfos(ids);
+                if (response != null && response.getImageInfo() != null) {
+                    // 构建 imageId -> Image 映射
+                    response.getImageInfo().forEach(image -> {
+                        if (image.getImageId() != null) {
+                            mediaMap.put(image.getImageId(), image);
+                        }
+                    });
+                }
             }
+            return mediaMap;
+        });
+
+        CompletableFuture<Map<String, GetVideoInfosResponse.Video>> previewVideoMapFuture = CompletableFuture.supplyAsync(() -> {
+            GetVideoInfosResponse getVideoInfosResponse = vodSdkService.GetVideoInfos(String.join(",", previewVideoIdSet));
+            Map<String, GetVideoInfosResponse.Video> previewVideoIdToVideo = new HashMap<>();
+            if (getVideoInfosResponse != null && getVideoInfosResponse.getVideoList() != null) {
+                getVideoInfosResponse.getVideoList().forEach(
+                        video -> previewVideoIdToVideo.put(video.getVideoId(), video)
+                );
+            }
+            return previewVideoIdToVideo;
+        });
+
+        Map<String, GetImageInfosResponse.Image> mediaMap;
+        Map<String, GetVideoInfosResponse.Video> previewVideoIdToVideo;
+        try {
+            mediaMap = mediaMapFuture.get();
+            previewVideoIdToVideo = previewVideoMapFuture.get();
+        } catch (Exception e) {
+            return ResponseResult.makeErrRsp("获取封面图或视频信息失败: " + e.getMessage());
         }
-        GetVideoInfosResponse getVideoInfosResponse = vodSdkService.GetVideoInfos(String.join(",", previewVideoIdSet));
-        Map<String, GetVideoInfosResponse.Video> previewVideoIdToVideo = new HashMap<>();
-        getVideoInfosResponse.getVideoList().forEach(
-                video -> previewVideoIdToVideo.put(video.getVideoId(), video)
-        );
 
         // 5. 为每个播单设置预览视频和封面图
         String regionId = vodConfig.getRegion() != null && !vodConfig.getRegion().trim().isEmpty()
                 ? vodConfig.getRegion()
                 : JwtConstants.DEFAULT_REGION_ID;
-        playLists.forEach(playList -> {
+
+        // 使用并行流提高处理效率
+        playLists.parallelStream().forEach(playList -> {
             // 5.1 构建预览视频并生成播放凭证
-            if (previewVideoIdToPlayListId.containsKey(playList.getPlaylistId())) {
+            if (previewVideoIdToPlayListId.containsKey(playList.getPlaylistId()) && previewVideoIdToVideo.containsKey(previewVideoIdToPlayListId.get(playList.getPlaylistId()))) {
                 PlaylistItemDto playlistItemDto = new PlaylistItemDto(previewVideoIdToVideo.get(previewVideoIdToPlayListId.get(playList.getPlaylistId())));
                 playlistItemDto.setPlayAuth(JwtUtil.getPlayAuthToken(playlistItemDto.getVideoId(), playKey, regionId));
                 playlistItemDto.setPlaylistId(playList.getPlaylistId());

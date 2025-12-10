@@ -28,9 +28,8 @@ cd VodAppServer
 编辑 `src/main/resources/application.yml`：
 
 ```yaml
-project:
-  server:
-    port: 9000
+server:
+  port: 9000
 
 aliyun:
   vod:

@@ -11,7 +11,7 @@
 
 ## JWT 播放鉴权
 
-> **整体方案说明**：如果需要从架构视角了解 VidAuth 新旧方案（旧版 `GetVideoPlayAuth` vs 新版本地 JWT 签名）、时序对比以及安全边界，建议先阅读专题文档：[播放鉴权方案（vidauth-design.md）](./vidauth-design.md)。
+> **整体方案说明**：如果需要从架构视角了解 VidAuth 新旧方案（旧版 `GetVideoPlayAuth` vs 新版本地 JWT 签名）、时序对比以及安全边界，建议先阅读专题文档：[播放鉴权方案](./vidauth-design.md)。
 
 ### 工作原理
 
@@ -54,12 +54,11 @@ String playAuth = JwtUtil.getPlayAuthToken(videoId, playKey, 7200);
 
 #### 获取 PlayKey
 
-1. 登录 [VOD 控制台](https://vod.console.aliyun.com/)
-2. 进入：`配置管理 → 分发加速配置 → 域名管理`
-3. 选择域名 → `访问控制`
-4. 获取或生成播放密钥
+详细接口文档路径：[GetAppPlayKey - 获取应用播放密钥](https://help.aliyun.com/zh/vod/developer-reference/api-vod-2017-03-21-getappplaykey)
 
 #### 设置 PlayKey
+
+详细接口文档路径：[SetAppPlayKey - 设置应用播放密钥](https://help.aliyun.com/zh/vod/developer-reference/api-vod-2017-03-21-setappplaykey)
 
 ```java
 // 调用接口设置
