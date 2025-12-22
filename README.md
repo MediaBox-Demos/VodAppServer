@@ -50,7 +50,7 @@ VodAppServer/
 │   ├── entity/
 │   │   ├── PlayList.java             # 播单业务视图（含视频列表）
 │   │   └── PlaylistItemDto.java      # 播单视频条目（含 playAuth）
-│   ├── jwt/                          # VidAuth JWT 本地签名实现
+│   ├── jwt/                          # 本地签名播放凭证（JWTPlayAuth）实现
 │   ├── result/                       # 统一返回结果模型
 │   └── sample/                       # 独立上传 SDK 示例（不参与主业务）
 ├── src/main/resources/
@@ -186,23 +186,23 @@ PlayList（播单）
 
 #### PlaylistItemDto（播单视频条目）
 - 继承自 VOD SDK 的 `GetPlaylistResponse.PlaylistItemDO`，并增加字段：  
-  - `playAuth`: 播放凭证（JWT Token，VidAuth 本地签名生成）。
+  - `playAuth`: 播放凭证字段，承载 JWTPlayAuth（AppServer 基于 PlayKey 本地签名生成，点播校验）。
 
 ## 🔐 安全与播放鉴权说明
 
-### JWT 播放鉴权（VidAuth，本地签名方案）
+### 本地签名播放凭证（JWTPlayAuth）
 
-系统使用 **基于 PlayKey 的本地 JWT 签名** 方式生成 VidAuth 播放凭证（`playAuth`）：
+系统使用 **基于 PlayKey 的本地 JWT 签名** 方式生成本地签名播放凭证 JWTPlayAuth（字段名为 `playAuth`）：
 
 ```java
 String playAuth = JwtUtil.getPlayAuthToken(videoId, playKey);
 ```
 
-- 服务端通过 `GetAppPlayKey` 获取应用的 PlayKey，并在本地根据 `videoId + playKey` 生成 JWT 播放凭证；
-- 相比旧版通过 `GetVideoPlayAuth` 远程获取签名的方式，本地签名减少了一次远程调用，在高并发和网络波动场景下更稳定；
+- 服务端通过 `GetAppPlayKey` 获取应用的 PlayKey，并在本地根据 `videoId + playKey` 生成 JWTPlayAuth；
+- 相比点播颁发播放凭证（PlayAuth）的方式，本地签名减少了一次远程调用，在高并发和网络波动场景下更稳定；
 - 详细对比与时序图说明，见 `docs/vidauth-design.md`。
 
-> 注意：使用 JWT 本地签名生成的 `vid + playAuth` 进行播放时，客户端播放器 SDK 版本需要 **>= 7.10.0**，否则无法完成播放鉴权。
+> 注意：使用 `vid + JWTPlayAuth`（字段名 `playAuth`）进行播放时，客户端播放器 SDK 版本需要 **>= 7.10.0**，否则无法完成播放鉴权。
 
 ### AccessKey 安全
 

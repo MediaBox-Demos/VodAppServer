@@ -13,9 +13,9 @@ import java.util.HashMap;
 /**
  * JWT 播放鉴权工具类
  *
- * <p>负责为指定视频生成播放凭证（playAuth），以及对 Token 进行基础校验。</p>
+ * <p>负责为指定视频生成本地签名播放凭证（JWTPlayAuth，字段名通常为 playAuth），以及对 Token 进行基础校验。</p>
  *
- * <p><b>重要提示：</b>使用 JWT 本地签名生成的 {@code vid + playAuth} 进行播放时，
+ * <p><b>重要提示：</b>使用 {@code vid + JWTPlayAuth}（字段名：{@code playAuth}）进行播放时，
  * 客户端播放器 SDK 版本需要满足 {@code >= 7.10.0}，否则无法正常完成播放鉴权。</p>
  *
  * @author: pxc
@@ -23,7 +23,7 @@ import java.util.HashMap;
  */
 public class JwtUtil {
     /**
-     * 生成播放凭证 Token（使用默认 regionId）
+     * 生成本地签名播放凭证 JWTPlayAuth（使用默认 regionId）
      *
      * @param videoId 视频ID
      * @param playKey 播放密钥
@@ -36,7 +36,7 @@ public class JwtUtil {
     }
 
     /**
-     * 生成播放凭证 Token
+     * 生成本地签名播放凭证 JWTPlayAuth
      *
      * @param videoId  视频ID
      * @param playKey  播放密钥

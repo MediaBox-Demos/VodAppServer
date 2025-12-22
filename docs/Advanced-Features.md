@@ -11,7 +11,7 @@
 
 ## JWT 播放鉴权
 
-> **整体方案说明**：如果需要从架构视角了解 VidAuth 新旧方案（旧版 `GetVideoPlayAuth` vs 新版本地 JWT 签名）、时序对比以及安全边界，建议先阅读专题文档：[播放鉴权方案](./vidauth-design.md)。
+> **整体方案说明**：如需从架构视角了解两种播放凭证方案（点播颁发 PlayAuth vs 本地签名 JWTPlayAuth）、时序对比以及安全边界，建议您先阅读专题文档：[播放鉴权方案](./vidauth-design.md)。
 
 ### 工作原理
 
@@ -20,11 +20,11 @@ VodAppServer 使用 JWT（JSON Web Token）实现安全的视频播放鉴权，�
 ```
 1. 客户端请求视频
    ↓
-2. 服务端生成 JWT Token（playAuth）
+2. 服务端生成本地签名播放凭证 JWTPlayAuth（字段名：playAuth）
    ↓
 3. 客户端使用 playAuth 请求播放
    ↓
-4. 阿里云 VOD 验证 Token
+4. 阿里云 VOD 校验 JWTPlayAuth
    ↓
 5. 返回视频流
 ```
@@ -70,14 +70,14 @@ SetAppPlayKeyResponse response = vodSdkService.SetAppPlayKey(
 
 ### 播放器 SDK 版本限制说明
 
-- 使用 JWT 本地签名 方式生成的 vid + playAuth 进行播放时，客户端播放器 SDK 版本必须满足以下要求：
+- 使用本地签名播放凭证 `vid + JWTPlayAuth`（字段名：playAuth）进行播放时，客户端播放器 SDK 版本必须满足以下要求：
   - Android / iOS 播放器 SDK 版本需 ≥ 7.10.0
 
 - 如果播放器 SDK 版本不符合要求：
 
-  - 即使服务端正确生成了基于 JWT 的 playAuth，播放器也无法正常完成鉴权与播放；
+  - 即使服务端生成了正确的本地签名播放凭证，播放器也无法正常完成鉴权与播放；
 
-  - 建议先升级播放器 SDK 至 7.10.0 或以上版本后，再接入本地签名方案。
+  - 建议先升级播放器 SDK 至 7.10.0 或以上版本后，再接入本地签名播放凭证方案。
 
 ### 安全建议
 
