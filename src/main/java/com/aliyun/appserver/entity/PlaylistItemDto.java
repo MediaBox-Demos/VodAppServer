@@ -24,7 +24,7 @@ import lombok.Data;
 public class PlaylistItemDto extends GetPlaylistResponse.PlaylistItemDO {
 
     /**
-     * 播放凭证（JWT Token），由服务端生成，用于安全播放当前视频
+     * 本地签名播放凭证，承载 JWTPlayAuth（AppServer 基于 PlayKey 本地签名生成，点播校验），用于安全播放当前视频
      */
     private String playAuth;
 

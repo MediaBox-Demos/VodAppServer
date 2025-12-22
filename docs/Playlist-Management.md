@@ -179,17 +179,17 @@
 
 ### **2. 视频播放凭证生成**
 
-播单中的每个视频都会自动生成 JWT 播放凭证（playAuth）：
+播单中的每个视频都会自动生成本地签名播放凭证（JWTPlayAuth，字段名 `playAuth`）：
 
-- **本地签名方案**：基于 VOD 的 PlayKey 本地签名生成，无需每次调用 VOD OpenAPI
-- **性能优势**：相比传统方式（每次播放调用 `GetVideoPlayAuth`），本地签名减少了一次远程调用
+- **本地签名方案**：基于 VOD 的 PlayKey 在 AppServer 本地签名生成 JWTPlayAuth，无需每次调用 VOD OpenAPI
+- **性能优势**：相比点播颁发播放凭证（PlayAuth，`GetVideoPlayAuth`），本地签名减少了一次远程调用
 - **业务增强接口**：在 `getPlaylistInfo` 和 `getPlaylistVideos` 接口中，系统会自动为每个视频生成 `playAuth`
-- **客户端使用**：客户端可直接使用 `videoId + playAuth` 进行视频播放
+- **客户端使用**：客户端可直接使用 `videoId + JWTPlayAuth`（字段名 `playAuth`）进行视频播放
 
 > 📘 **详细说明**：
 > - 播放鉴权方案对比，请参考 [播放鉴权方案](./vidauth-design.md)
 > - JWT 播放鉴权实践，请参考 [高级功能 - JWT 播放鉴权](./Advanced-Features.md#jwt-播放鉴权)
-> - **注意**：使用本地签名生成的 `vid + playAuth` 进行播放时，客户端播放器 SDK 版本需要 **≥ 7.10.0**
+> - **注意**：使用 `vid + JWTPlayAuth`（字段名 `playAuth`）进行播放时，客户端播放器 SDK 版本需要 **≥ 7.10.0**
 
 ### 3. 预览效果实现
 

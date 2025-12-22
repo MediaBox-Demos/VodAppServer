@@ -67,12 +67,12 @@ public class PlayListServiceImpl implements PlayListService {
      * 1. 如果未指定播单ID，则返回第一个播单
      * 2. 获取播单基本信息和视频列表
      * 3. 处理播单封面图（将imageId转换为实际URL）
-     * 4. 为每个视频生成JWT播放凭证
+     * 4. 为每个视频生成本地签名播放凭证（JWTPlayAuth）
      *
      * @param playListId 播单ID（可为空，为空时返回第一个播单）
      * @return 播单详情结果，包含：
      * - 播单基本信息（ID、名称、描述、状态等）
-     * - 视频列表（含播放凭证playAuth）
+     * - 视频列表（含播放凭证字段 playAuth，值为 JWTPlayAuth）
      * - 封面图实际URL
      */
     @Override
@@ -134,7 +134,7 @@ public class PlayListServiceImpl implements PlayListService {
                 return ResponseResult.makeErrRsp("播放密钥不能为空");
             }
 
-            // 5.2 为每个视频生成JWT播放凭证（playAuth）
+            // 5.2 为每个视频生成 JWTPlayAuth（字段名：playAuth）
             final String regionId = vodConfig.getRegion() != null && !vodConfig.getRegion().trim().isEmpty()
                     ? vodConfig.getRegion()
                     : JwtConstants.DEFAULT_REGION_ID;
@@ -201,12 +201,12 @@ public class PlayListServiceImpl implements PlayListService {
      * 1. 获取播单列表（支持分页）
      * 2. 为每个播单获取第一个视频作为预览
      * 3. 批量处理播单封面图
-     * 4. 为预览视频生成播放凭证
+     * 4. 为预览视频生成本地签名播放凭证（JWTPlayAuth）
      *
      * @param request 查询播单列表请求（pageNo, pageSize, sortBy）
      * @return 播单列表结果，每个播单包含：
      * - 播单基本信息
-     * - 第一个视频（作为预览，含播放凭证）
+     * - 第一个视频（作为预览，含本地签名播放凭证 JWTPlayAuth）
      * - 封面图实际URL
      */
     @Override
@@ -305,7 +305,7 @@ public class PlayListServiceImpl implements PlayListService {
 
         // 使用并行流提高处理效率
         playLists.parallelStream().forEach(playList -> {
-            // 5.1 构建预览视频并生成播放凭证
+            // 5.1 构建预览视频并生成 JWTPlayAuth（字段名：playAuth）
             if (previewVideoIdToPlayListId.containsKey(playList.getPlaylistId()) && previewVideoIdToVideo.containsKey(previewVideoIdToPlayListId.get(playList.getPlaylistId()))) {
                 PlaylistItemDto playlistItemDto = new PlaylistItemDto(previewVideoIdToVideo.get(previewVideoIdToPlayListId.get(playList.getPlaylistId())));
                 playlistItemDto.setPlayAuth(JwtUtil.getPlayAuthToken(playlistItemDto.getVideoId(), playKey, regionId));

@@ -24,7 +24,7 @@
 | 文档名称 | 文档链接 | 详细描述 | 用途说明 |
 |---------|---------|---------|---------|
 | 高级功能 | [Advanced-Features.md](./Advanced-Features.md) | 详细介绍 JWT 播放鉴权、安全与性能等高级特性 | 帮助开发者实现复杂业务场景、性能优化和系统扩展 |
-| 播放鉴权方案 | [vidauth-design.md](./vidauth-design.md) | 对比旧版 GetVideoPlayAuth 与新版本地 JWT 签名方案，说明时序流程、优势及 SDK 版本要求 | 帮助客户和开发者理解 VidAuth 播放鉴权整体方案 |
+| 播放鉴权方案 | [vidauth-design.md](./vidauth-design.md) | 对比点播颁发播放凭证（PlayAuth）与本地签名播放凭证（JWTPlayAuth），说明时序流程、优势及 SDK 版本要求 | 帮助客户和开发者理解播放鉴权整体方案 |
 
 ## **推荐阅读顺序**
 
@@ -39,7 +39,7 @@
 ### **进阶学习路径**
 
 6. [高级功能](./Advanced-Features.md) - 深度定制和性能优化
-7. [播放鉴权方案](./vidauth-design.md) - 了解 VidAuth 新旧方案对比与本地签名优势
+7. [播放鉴权方案](./vidauth-design.md) - 了解 点播颁发播放凭证（PlayAuth） 与 本地签名播放凭证（JWTPlayAuth） 方案对比与优劣势
 
 ---
 

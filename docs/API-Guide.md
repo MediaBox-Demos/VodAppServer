@@ -283,7 +283,7 @@
 **接口地址**：`POST /appServer/getPlaylistInfo?playListId=pl_xxx`
 
 **特点**：
-- 自动生成视频播放凭证（playAuth）
+- 自动生成本地签名播放凭证（JWTPlayAuth，字段名：playAuth）
 - 封面图转换为实际URL
 - 如不传 playListId，返回第一个播单
 
@@ -327,7 +327,7 @@
 
 **特点**：
 - 每个播单包含第一个视频作为预览
-- 预览视频包含播放凭证
+- 预览视频包含本地签名播放凭证（JWTPlayAuth）
 - 封面图转换为实际URL
 
 ---
