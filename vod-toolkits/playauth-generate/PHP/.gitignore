@@ -1,0 +1,25 @@
+# Dependencies
+vendor/
+
+# Composer lock file (optional, uncomment if needed)
+# composer.lock
+
+# IDE
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Local environment
+.env
+.env.local
+
+# ================================
+# Project tools
+# ================================
+.claude/
+CLAUDE.md
+.specify/
+specs/

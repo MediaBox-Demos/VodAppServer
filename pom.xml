@@ -22,6 +22,13 @@
     </properties>
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.aliyun</groupId>
+            <artifactId>mts20140618</artifactId>
+            <version>6.0.1</version>
+        </dependency>
+
         <!-- Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -85,6 +92,20 @@
             <version>2.0.1.Final</version>
         </dependency>
 
+<!--        <dependency>
+            <groupId>com.aliyun-inner</groupId>
+            <artifactId>aliyun-java-sdk-vod</artifactId>
+            <scope>system</scope>
+            <version>2.16.34</version>
+            <systemPath>${project.basedir}/src/main/resources/lib/aliyun-java-sdk-vod-2.16.34.jar</systemPath>
+        </dependency>-->
+
+        <!--<dependency>
+            <groupId>com.aliyun.inner</groupId>
+            <artifactId>aliyun-java-sdk-vod</artifactId>
+            <version>2.16.39</version>
+        </dependency>-->
+
         <dependency>
             <groupId>com.aliyun-inner</groupId>
             <artifactId>aliyun-java-sdk-vod</artifactId>
@@ -94,15 +115,17 @@
         </dependency>
 
         <!--<dependency>
-            <groupId>com.aliyun.inner</groupId>
-            <artifactId>aliyun-java-sdk-vod</artifactId>
-            <version>2.16.39</version>
+            <groupId>com.aliyun.vod</groupId>
+            <artifactId>aliyun-java-vod-upload</artifactId>
+            <version>1.4.15</version>
         </dependency>-->
 
         <dependency>
             <groupId>com.aliyun.vod</groupId>
-            <artifactId>aliyun-java-vod-upload</artifactId>
+            <artifactId>upload</artifactId>
             <version>1.4.15</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/lib/aliyun-java-vod-upload-1.4.15.jar</systemPath>
         </dependency>
 
         <!-- JWT依赖 -->
