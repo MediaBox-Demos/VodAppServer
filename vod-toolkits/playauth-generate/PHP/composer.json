@@ -1,0 +1,11 @@
+{
+    "name": "aliyun/vod-play-auth",
+    "autoload": {
+        "psr-4": {
+            "Aliyun\\Vod\\": "src/Aliyun/Vod/"
+        }
+    },
+    "require": {
+        "firebase/php-jwt": "^7.0"
+    }
+}

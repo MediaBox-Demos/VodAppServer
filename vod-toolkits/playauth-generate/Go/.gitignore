@@ -1,0 +1,27 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Output of go coverage
+*.out
+
+# Go workspace
+vendor/
+
+# Dependency directories
+go.work
+go.work.sum
+
+# ================================
+# Project tools
+# ================================
+.claude/
+CLAUDE.md
+.specify/
+specs/
